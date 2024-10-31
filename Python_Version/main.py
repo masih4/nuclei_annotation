@@ -11,7 +11,7 @@ import sys
 import cv2 as cv
 from scipy.ndimage import distance_transform_edt as bwdist
 from skimage.measure import label
-
+from skimage.draw import polygon2mask
 
 def unet_weight_map(y, wc=None, w0=10, sigma=25):
     """
@@ -243,8 +243,17 @@ def masks_generator(size_target, imagej_zips_path, raw_imgs_path, results_path, 
                     cool = np.array([color,color,color])
                     c_ind = np.where(cool == color_code)[0]
                     nuc_class_count = nuc_class_count+1
-                    mask = np.zeros((size_target,size_target),dtype=np.uint16)
-                    mask = cv.fillConvexPoly(mask, np.array(sROI.coordinates(),dtype=np.int32),1)
+                    # mask = np.zeros((size_target,size_target),dtype=np.uint16)
+                    # mask = cv.fillConvexPoly(mask, np.array(sROI.coordinates(),dtype=np.int32),1)
+
+                    polygon_numpy = np.array(sROI.coordinates(),dtype=np.int32)
+                    polygon_numpy1 = polygon_numpy.copy()
+                    polygon_numpy1[:, 0] = polygon_numpy[:, 1]
+                    polygon_numpy1[:, 1] = polygon_numpy[:, 0]
+                    polygon_numpy1 = np.squeeze(polygon_numpy1)
+
+                    mask = polygon2mask((size_target, size_target), polygon_numpy1)
+                    mask = np.array(mask, dtype=np.uint8)
                     if debug:
                         plt.imshow(mask)
                         plt.show()
